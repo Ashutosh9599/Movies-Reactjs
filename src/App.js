@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import MoviesList from './components/MoviesList';
+import MovieForm from './components/MovieForm'; 
 import './App.css';
 
 function App() {
@@ -7,6 +9,11 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [retrying, setRetrying] = useState(false);
+  const [newMovie, setNewMovie] = useState({
+    title: '',
+    openingText: '',
+    releaseDate: '',
+  });
 
   const fetchMoviesHandler = useCallback(async () => {
     setIsLoading(true);
@@ -28,7 +35,7 @@ function App() {
       }));
 
       setMovies(transformedMovies);
-      setRetrying(false); 
+      setRetrying(false);
     } catch (error) {
       setError(error.message);
       setRetrying(true);
@@ -49,13 +56,34 @@ function App() {
       return () => clearTimeout(retryTimer);
     }
   }, [retrying, fetchMoviesHandler]);
+
   const cancelRetryHandler = useCallback(() => {
     setRetrying(false);
   }, []);
+
+  const inputChangeHandler = useCallback((event) => {
+    const { name, value } = event.target;
+    setNewMovie((prevMovie) => ({
+      ...prevMovie,
+      [name]: value,
+    }));
+  }, []);
+
+  const addMovieHandler = useCallback(() => {
+    console.log('NewMovieObj:', newMovie);
+    setNewMovie({
+      title: '',
+      openingText: '',
+      releaseDate: '',
+    });
+  }, [newMovie]);
+
   let content = <p>Found no movies.</p>;
+
   if (movies.length > 0) {
     content = <MoviesList movies={movies} />;
   }
+
   if (error && retrying) {
     content = (
       <div>
@@ -67,11 +95,20 @@ function App() {
   } else if (error) {
     content = <p>{error}</p>;
   }
+
   if (isLoading) {
     content = <p>Loading...</p>;
   }
+
   return (
     <React.Fragment>
+      <section>
+      <MovieForm
+          newMovie={newMovie}
+          onInputChange={inputChangeHandler}
+          onAddMovie={addMovieHandler}
+        />
+      </section>
       <section>
         <button onClick={fetchMoviesHandler} disabled={retrying}>
           Fetch Movies
@@ -81,4 +118,5 @@ function App() {
     </React.Fragment>
   );
 }
+
 export default App;
